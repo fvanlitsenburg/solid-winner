@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expandable Table with Editable Rows</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+    }
+    .edit-btn, .add-btn {
+      cursor: pointer;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
+    .add-btn {
+      margin-top: 20px;
+      width: 100px;
+    }
+    .save-btn {
+      background-color: #28a745;
+    }
+    .delete-btn {
+      background-color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Main Table -->
+<table id="question-table">
+  <thead>
+    <tr>
+      <th>Question</th>
+      <th>Query</th>
+      <th>Prompt</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- Rows will be populated dynamically -->
+  </tbody>
+</table>
+
+<!-- Add Button -->
+<button class="add-btn" onclick="addNewRow()">+ Add Row</button>
+
+<script>
+  async function fetchData() {
+    try {
+      const response = await fetch("http://localhost:3000/questions");
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      const data = await response.json();
+      populateTable(data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  }
+
+  function populateTable(data) {
+    const tableBody = document.querySelector("#question-table tbody");
+    tableBody.innerHTML = ""; // Clear existing rows
+  
+    data.forEach(item => {
+      const row = document.createElement("tr");
+      row.dataset.id = item.id; // Add data-id for update purposes.
+  
+      row.innerHTML = `
+        <td>${item.question}</td>
+        <td>${item.query}</td>
+        <td>${item.prompt}</td>
+        <td>
+          <button class="edit-btn" onclick="editRow(this)">Edit</button>
+          <button class="delete-btn" onclick="deleteRow(this)">Delete</button>
+        </td>
+      `;
+      tableBody.appendChild(row);
+    });
+  }
+  
+  function deleteRow(button) {
+    const row = button.closest("tr");
+    const questionId = row.dataset.id; // Retrieve the ID from the row.
+  
+    if (!questionId) {
+      alert("Error: Missing question ID. Cannot delete.");
+      return;
+    }
+  
+    // Send DELETE request to the server.
+    fetch(`http://localhost:3000/questions/${questionId}`, {
+      method: 'DELETE'
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Failed to delete row.");
+      }
+      row.remove(); // Remove the row from the UI only if the request was successful.
+      alert("Row deleted successfully!");
+    })
+    .catch(error => {
+      console.error("Error deleting row:", error);
+      alert("Error deleting row. Please try again.");
+    });
+  }
+  
+  
+  function editRow(button) {
+    const row = button.parentElement.parentElement;
+    const cells = row.querySelectorAll("td");
+
+    // Change text cells to input fields
+    cells[0].innerHTML = `<input type="text" value="${cells[0].textContent.trim()}">`; // Question
+    cells[1].innerHTML = `<input type="text" value="${cells[1].textContent.trim()}">`; // Query
+    cells[2].innerHTML = `<input type="text" value="${cells[2].textContent.trim()}">`; // Prompt
+
+    // Change button to save
+    button.textContent = "Save";
+    button.classList.remove("edit-btn");
+    button.classList.add("save-btn");
+    button.onclick = () => saveRow(button);
+  }
+
+  async function updateQuestion(id, question, query, prompt) {
+    try {
+      await fetch(`http://localhost:3000/questions/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, query, prompt }),
+      });
+    } catch (error) {
+      console.error("Error updating question:", error);
+    }
+  }
+  
+
+  function saveRow(button) {
+    const row = button.closest("tr");
+    const questionInput = row.querySelector("td:nth-child(1) input").value.trim();
+    let queryInput = row.querySelector("td:nth-child(2) input").value.trim();
+    let promptInput = row.querySelector("td:nth-child(3) input").value.trim();
+  
+    // If query or prompt is empty, use the question value.
+    if (!queryInput) queryInput = questionInput;
+    if (!promptInput) promptInput = questionInput;
+  
+    const questionId = row.dataset.id; // Get ID if available.
+  
+    fetch(`http://localhost:3000/questions/${questionId || ''}`, {
+      method: questionId ? 'PUT' : 'POST', // Use PUT for updates, POST for new rows.
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ question: questionInput, query: queryInput, prompt: promptInput })
+    })
+    .then(response => response.json())
+    .then(data => {
+      alert("Row saved successfully!");
+      console.log(data);
+  
+      // Change inputs back to static text after saving.
+      row.innerHTML = `
+        <td>${questionInput}</td>
+        <td>${queryInput}</td>
+        <td>${promptInput}</td>
+        <td>
+          <button class="edit-btn" onclick="editRow(this)">Edit</button>
+          <button class="delete-btn" onclick="deleteRow(this)">Delete</button>
+        </td>
+      `;
+    })
+    .catch(error => {
+      console.error("Error saving row:", error);
+    });
+  }
+  
+
+  function addNewRow() {
+    const tableBody = document.querySelector("#question-table tbody");
+
+    const newRow = document.createElement("tr");
+    newRow.innerHTML = `
+      <td><input type="text" placeholder="Enter Question"></td>
+      <td><input type="text" placeholder="Enter Query"></td>
+      <td><input type="text" placeholder="Enter Prompt"></td>
+      <td>
+        <button class="save-btn" onclick="saveRow(this)">Save</button>
+      </td>
+    `;
+    tableBody.appendChild(newRow);
+  }
+
+  // Fetch data on page load
+  fetchData();
+</script>
+
+</body>
+</html>
