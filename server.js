@@ -65,11 +65,11 @@ app.get('/forms', async (req, res) => {
 
 // 4. Add a new form
 app.post('/forms', async (req, res) => {
-  const { title, description, questions } = req.body;
+  const { name } = req.body;
   try {
     const result = await pool.query(
-      'INSERT INTO forms (title, description, questions) VALUES ($1, $2, $3) RETURNING *',
-      [title, description, JSON.stringify(questions)]
+      'INSERT INTO forms (name) VALUES ($1) RETURNING *',
+      [name]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -77,6 +77,7 @@ app.post('/forms', async (req, res) => {
     res.status(500).send('Error adding form');
   }
 });
+
 
 // 5. Trigger a run
 app.post('/run', async (req, res) => {
@@ -97,28 +98,36 @@ app.listen(PORT, () => {
 
 // 6. Update question
 
-app.put('/questions/:id', async (req, res) => {
-    const { id } = req.params;
-    const { query, prompt } = req.body;
-    try {
-      const result = await pool.query(
-        'UPDATE questions SET query = $1, prompt = $2 WHERE id = $3 RETURNING *',
-        [query, prompt, id]
-      );
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.error(error);
-      res.status(500).send('Error updating question');
+app.put('/forms/:formId/questions/:id', async (req, res) => {
+  const { formId, id } = req.params; // Now also extracting formId
+  const { query, prompt } = req.body;
+
+  try {
+    const result = await pool.query(
+      'UPDATE questions SET query = $1, prompt = $2 WHERE id = $3 AND form_id = $4 RETURNING *',
+      [query, prompt, id, formId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Question not found or does not belong to this form.' });
     }
-  });
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error updating question');
+  }
+});
+
   
   // 7. Add a new question
-  app.post('/questions', async (req, res) => {
+  app.post('/forms/:formId/questions', async (req, res) => {
+    const { formId } = req.params;
     const { question, query, prompt } = req.body;
     try {
       const result = await pool.query(
-        'INSERT INTO questions (question, query, prompt) VALUES ($1, $2, $3) RETURNING *',
-        [question, query, prompt]
+        'INSERT INTO questions (form_id, question, query, prompt) VALUES ($1, $2, $3, $4) RETURNING *',
+        [formId, question, query, prompt]
       );
       res.status(201).json(result.rows[0]);
     } catch (error) {
@@ -127,7 +136,7 @@ app.put('/questions/:id', async (req, res) => {
     }
   });
   
-  // 8. Delete a question
+  
   // 8. Delete a question
   app.delete('/questions/:id', async (req, res) => {
     const { id } = req.params;
@@ -143,5 +152,32 @@ app.put('/questions/:id', async (req, res) => {
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Error deleting question' });
+    }
+  });
+
+  // Get questions for a specific form
+  app.get('/forms/:formId/questions', async (req, res) => {
+    const { formId } = req.params;
+    try {
+      const questionsResult = await pool.query(
+        'SELECT * FROM questions WHERE form_id = $1',
+        [formId]
+      );
+      res.json(questionsResult.rows);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Error fetching questions');
+    }
+  });
+
+
+  // Endpoint to fetch all forms
+  app.get('/forms', async (req, res) => {
+    try {
+      const forms = await getAllForms();
+      res.json(forms);
+    } catch (error) {
+      console.error('Error fetching forms:', error);
+      res.status(500).send({ error: 'Failed to fetch forms' });
     }
   });
