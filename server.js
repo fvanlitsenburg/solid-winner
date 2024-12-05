@@ -181,3 +181,27 @@ app.put('/forms/:formId/questions/:id', async (req, res) => {
       res.status(500).send({ error: 'Failed to fetch forms' });
     }
   });
+
+  // 5. Delete a form
+app.delete('/forms/:id', async (req, res) => {
+  const formId = req.params.id;
+  
+  try {
+    // Delete the form by its ID
+    const result = await pool.query(
+      'DELETE FROM forms WHERE id = $1 RETURNING *', 
+      [formId]
+    );
+
+    if (result.rowCount === 0) {
+      // If no form was found with that ID
+      return res.status(404).send('Form not found');
+    }
+
+    // Successfully deleted the form
+    res.status(200).json({ message: 'Form deleted successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error deleting form');
+  }
+});
