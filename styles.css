@@ -1,0 +1,108 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    height: 100vh;
+    display: grid;
+    place-items: center;
+  }
+
+  .grid-container {
+    display: grid;
+    grid-template-rows: 1fr 1fr; /* Two rows */
+    grid-template-columns: 1fr 1fr; /* Two columns */
+    gap: 20px;
+    width: 90%;
+    height: 90%;
+  }    
+
+  .section {
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 5px;
+    overflow: auto;
+  }
+
+  .form-section {
+    grid-row: 1 / 2; /* Top-left */
+    grid-column: 1 / 2;
+  }
+  
+  .run-section {
+    grid-row: 1 / 2; /* Top-right */
+    grid-column: 2 / 3;
+  }
+  
+  .empty-section {
+    grid-row: 2 / 3; /* Bottom-right */
+    grid-column: 2 / 3;
+  }
+  
+  .folder-section {
+    grid-row: 2 / 3; /* Bottom-left */
+    grid-column: 1 / 2;
+  }
+
+  h2 {
+    margin-bottom: 10px;
+  }
+
+  .form-list {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  .form-list li {
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+
+  .button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+  }
+
+  .button:hover {
+    background-color: #0056b3;
+  }
+
+  .input {
+    padding: 5px;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+
+  th, td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+  }
+
+  .save-btn {
+    background-color: #28a745;
+  }
+
+  .delete-btn {
+    background-color: #dc3545;
+  }
+
+  td[contenteditable] {
+    border: 1px solid #007BFF;
+    background-color: #f9f9f9;
+  }

@@ -205,3 +205,125 @@ app.delete('/forms/:id', async (req, res) => {
     res.status(500).send('Error deleting form');
   }
 });
+
+// FOLDERS
+
+// POST /folders - Create a new folder
+app.post('/folders', async (req, res) => {
+  const { name, parentFolderId } = req.body;
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO folders (name, parent_folder_id) VALUES ($1, $2) RETURNING *',
+      [name, parentFolderId || null] // Null for root folders
+    );
+
+    res.status(201).json(result.rows[0]); // Return the newly created folder
+  } catch (error) {
+    console.error('Error creating folder:', error);
+    res.status(500).send('Server error');
+  }
+});
+
+// GET /folders - Get all folders
+app.get('/folders', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM folders');
+    res.status(200).json(result.rows); // Return all folders
+  } catch (error) {
+    console.error('Error fetching folders:', error);
+    res.status(500).send('Server error');
+  }
+});
+
+// GET /folders/:folderId - Get a specific folder
+app.get('/folders/:folderId', async (req, res) => {
+  const { folderId } = req.params;
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM folders WHERE id = $1',
+      [folderId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).send('Folder not found');
+    }
+
+    res.status(200).json(result.rows[0]); // Return the folder details
+  } catch (error) {
+    console.error('Error fetching folder:', error);
+    res.status(500).send('Server error');
+  }
+});
+
+// PUT /folders/:folderId - Update folder details
+app.put('/folders/:folderId', async (req, res) => {
+  const { folderId } = req.params;
+  const { name, parentFolderId } = req.body;
+
+  try {
+    const result = await pool.query(
+      'UPDATE folders SET name = $1, parent_folder_id = $2 WHERE id = $3 RETURNING *',
+      [name, parentFolderId || null, folderId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).send('Folder not found');
+    }
+
+    res.status(200).json(result.rows[0]); // Return updated folder
+  } catch (error) {
+    console.error('Error updating folder:', error);
+    res.status(500).send('Server error');
+  }
+});
+
+// DELETE /folders/:folderId - Delete folder
+app.delete('/folders/:folderId', async (req, res) => {
+  const { folderId } = req.params;
+
+  try {
+    // Delete files associated with the folder
+    await pool.query('DELETE FROM files WHERE folder_id = $1', [folderId]);
+
+    // Optionally, delete subfolders if you support nesting
+    await pool.query('DELETE FROM folders WHERE parent_folder_id = $1', [folderId]);
+
+    // Finally, delete the folder itself
+    const result = await pool.query(
+      'DELETE FROM folders WHERE id = $1 RETURNING *',
+      [folderId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).send('Folder not found');
+    }
+
+    res.status(200).json(result.rows[0]); // Return deleted folder
+  } catch (error) {
+    console.error('Error deleting folder:', error);
+    res.status(500).send('Server error');
+  }
+});
+
+// POST /folders/:folderId/files - Upload file to a folder
+app.post('/folders/:folderId/files', async (req, res) => {
+  const { folderId } = req.params;
+  const { fileName, filePath } = req.body;
+
+  try {
+    // Insert the file record into the database, associating it with the folder
+    const result = await pool.query(
+      'INSERT INTO files (name, path, folder_id) VALUES ($1, $2, $3) RETURNING *',
+      [fileName, filePath, folderId]
+    );
+
+    res.status(201).json(result.rows[0]); // Return the newly created file
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    res.status(500).send('Server error');
+  }
+});
+
+
