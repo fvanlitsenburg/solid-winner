@@ -47,15 +47,28 @@
     <!-- Folder Management Section -->
     <div class="section folder-section">
       <h2>Manage Folders</h2>
+      <!-- Create Folder -->
       <div>
         <input type="text" id="new-folder-name" class="input" placeholder="Enter folder name">
         <button class="button" onclick="createFolder()">+ Create Folder</button>
       </div>
+
+      <!-- Upload File -->
       <div>
-        <input type="file" id="file-upload" class="input">
+        <select id="folder-select-upload" class="input">
+          <option value="">-- Select a Folder --</option>
+        </select>
+        <input type="file" id="file-input" class="input">
         <button class="button" onclick="uploadFile()">Upload File</button>
       </div>
+
+      <!-- File List -->
+      <div>
+        <h3>Files in Selected Folder</h3>
+        <ul id="file-list"></ul>
+      </div>
     </div>
+
   </div>
 
 
