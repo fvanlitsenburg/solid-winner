@@ -13,13 +13,14 @@ const formRoutes = require('./routes/forms');
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json()); // For parsing application/json
 
 // Static files (optional)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Use Routes
 app.use('/folders', folderRoutes);
-app.use('/folders/:folderId/files', fileRoutes);
+app.use('/files', fileRoutes);
 app.use('/forms', formRoutes);
 
 const PORT = process.env.PORT || 3000;
