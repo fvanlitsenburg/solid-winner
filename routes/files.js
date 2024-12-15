@@ -34,10 +34,10 @@ router.post('/', upload.single('file'), async (req, res) => {
       } else {
         console.error('OCR processing failed:', ocrError.message);
       }
-            return res.status(500).json({ error: 'OCR processing failed' });
+      return res.status(500).json({ error: 'OCR processing failed' });
     }
 
-    const { text, byte_streams } = ocrResponse.data;
+    const { text, byte_streams, description } = ocrResponse.data;
 
     // Save file details to the database
     const fileResult = await pool.query(
@@ -53,20 +53,24 @@ router.post('/', upload.single('file'), async (req, res) => {
     );
 
     // Save parsed content to the database
-    const parsedContentPromises = Object.entries(text).map(([pageNumber, pageText]) => {
+    const parsedContentPromises = Object.entries(text).map(([pageNumber, pageText], index) => {
       const parsedPageNumber = parseInt(pageNumber.replace('Page ', ''), 10);
       const ocrBytes = byte_streams ? byte_streams[pageNumber] : null;
+      const pageDescription = description[index] || null; // Match description to page index
 
       return pool.query(
-        `INSERT INTO parsed_content (file_id, page_number, text_content, ocr_bytes)
-         VALUES ($1, $2, $3, $4)`,
-        [uploadedFile.id, parsedPageNumber, pageText, ocrBytes]
+        `INSERT INTO parsed_content (file_id, page_number, text_content, ocr_bytes, description)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [uploadedFile.id, parsedPageNumber, pageText, ocrBytes, pageDescription]
       );
     });
 
     await Promise.all(parsedContentPromises);
 
-    res.status(201).json({ message: 'File uploaded and processed successfully', file: uploadedFile });
+    res.status(201).json({
+      message: 'File uploaded and processed successfully',
+      file: uploadedFile
+    });
   } catch (error) {
     console.error('Error uploading file:', error);
     res.status(500).json({ error: 'Failed to upload and process file' });
