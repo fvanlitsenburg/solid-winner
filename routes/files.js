@@ -37,7 +37,7 @@ router.post('/', upload.single('file'), async (req, res) => {
       return res.status(500).json({ error: 'OCR processing failed' });
     }
 
-    const { text, byte_streams, description } = ocrResponse.data;
+    const { text, byte_streams, descriptions } = ocrResponse.data;
 
     // Save file details to the database
     const fileResult = await pool.query(
@@ -56,10 +56,11 @@ router.post('/', upload.single('file'), async (req, res) => {
     const parsedContentPromises = Object.entries(text).map(([pageNumber, pageText], index) => {
       const parsedPageNumber = parseInt(pageNumber.replace('Page ', ''), 10);
       const ocrBytes = byte_streams ? byte_streams[pageNumber] : null;
-      const pageDescription = description[index] || null; // Match description to page index
+      // Ensure description is defined and has the expected length
+      const pageDescription = descriptions && descriptions[pageNumber] ? descriptions[pageNumber] : null;
 
       return pool.query(
-        `INSERT INTO parsed_content (file_id, page_number, text_content, ocr_bytes, description)
+        `INSERT INTO parsed_content (file_id, page_number, text_content, ocr_bytes, describe)
          VALUES ($1, $2, $3, $4, $5)`,
         [uploadedFile.id, parsedPageNumber, pageText, ocrBytes, pageDescription]
       );
@@ -67,10 +68,14 @@ router.post('/', upload.single('file'), async (req, res) => {
 
     await Promise.all(parsedContentPromises);
 
-    res.status(201).json({
-      message: 'File uploaded and processed successfully',
-      file: uploadedFile
-    });
+    // Create the response object to match your required structure
+    const response = {
+      text: text,             // Directly returning text dictionary from OCR service
+      byte_streams: byte_streams, // Directly returning byte streams from OCR service
+      descriptions: descriptions // Directly returning descriptions from OCR service
+    };
+
+    res.status(201).json(response);
   } catch (error) {
     console.error('Error uploading file:', error);
     res.status(500).json({ error: 'Failed to upload and process file' });
