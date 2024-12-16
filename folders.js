@@ -95,25 +95,38 @@ async function uploadFile() {
   }
 }
 
-// Function to fetch files for a specific folder
+// Function to fetch files for a specific folder and display them in a table
 async function fetchFilesForFolder(folderId) {
   try {
     const response = await fetch(`http://localhost:3000/folders/${folderId}/files`);
     if (!response.ok) throw new Error('Failed to fetch files');
 
     const files = await response.json();
-    const fileList = document.getElementById('file-list');
-    fileList.innerHTML = '';
+    const fileTable = document.getElementById('file-table'); // Assuming there's a table with this ID
+    const tableBody = fileTable.querySelector('tbody');
+    tableBody.innerHTML = ''; // Clear previous table rows
 
     files.forEach((file) => {
-      const listItem = document.createElement('li');
-      listItem.textContent = file.name;
-      fileList.appendChild(listItem);
+      const tableRow = document.createElement('tr');
+
+      // Create table cell for file name
+      const nameCell = document.createElement('td');
+      nameCell.textContent = file.name;
+      tableRow.appendChild(nameCell);
+
+      // Create table cell for 'describe' content
+      const describeCell = document.createElement('td');
+      describeCell.textContent = file.describe || 'No description available'; // Handle missing 'describe'
+      tableRow.appendChild(describeCell);
+
+      // Append row to the table body
+      tableBody.appendChild(tableRow);
     });
   } catch (error) {
     console.error('Error fetching files:', error);
   }
 }
+
 
 // Function to fetch folders on page load
 async function fetchFolders() {

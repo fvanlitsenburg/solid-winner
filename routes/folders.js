@@ -29,16 +29,20 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Fetch files associated with a specific folder
+/// Fetch files associated with a specific folder
 router.get('/:folderId/files', async (req, res) => {
   const { folderId } = req.params;
 
   try {
     const result = await pool.query(
-      `SELECT f.id, f.name, f.path 
-       FROM files f
-       INNER JOIN folder_files ff ON ff.file_id = f.id
-       WHERE ff.folder_id = $1`,
+      `SELECT f.id, f.name, f.path, 
+        (SELECT describe FROM parsed_content pc 
+          WHERE pc.file_id = f.id 
+          ORDER BY pc.id ASC 
+          LIMIT 1) AS describe
+        FROM files f
+        INNER JOIN folder_files ff ON ff.file_id = f.id
+        WHERE ff.folder_id = $1;`, // Ensures the first `describe` is taken if multiple exist
       [folderId]
     );
 
@@ -48,5 +52,6 @@ router.get('/:folderId/files', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+
 
 module.exports = router;

@@ -106,3 +106,31 @@ body {
     border: 1px solid #007BFF;
     background-color: #f9f9f9;
   }
+
+  #file-table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed; /* Ensures columns respect the width set in <th> */
+  }
+  
+  #file-table th,
+  #file-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+  }
+  
+  #file-table th {
+    background-color: #f4f4f4;
+    text-align: left;
+  }
+  
+  #file-table td {
+    word-wrap: break-word; /* Wraps text within the cell */
+    white-space: normal;   /* Ensures long words also wrap */
+  }
+  
+  #file-table th:nth-child(1),
+  #file-table td:nth-child(1) {
+    width: 33%; /* File name column width */
+  }
+  
