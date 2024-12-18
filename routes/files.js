@@ -75,6 +75,15 @@ router.post('/', upload.single('file'), async (req, res) => {
       descriptions: descriptions // Directly returning descriptions from OCR service
     };
 
+      // Sync with the second app (Elasticsearch sync)
+    try {
+      await axios.post('http://127.0.0.1:8000/sync-all-documents');
+      console.log('Database sync completed.');
+    } catch (syncError) {
+      console.error('Error syncing documents:', syncError.message);
+    }
+    
+
     res.status(201).json(response);
   } catch (error) {
     console.error('Error uploading file:', error);

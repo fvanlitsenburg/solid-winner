@@ -8,6 +8,7 @@ const app = express();
 const folderRoutes = require('./routes/folders');
 const fileRoutes = require('./routes/files');
 const formRoutes = require('./routes/forms');
+const runsRoutes = require('./routes/runs');  // Import the routes
 
 // Middleware setup
 app.use(cors());
@@ -22,6 +23,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/folders', folderRoutes);
 app.use('/files', fileRoutes);
 app.use('/forms', formRoutes);
+app.use('/runs', runsRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
