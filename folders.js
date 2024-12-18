@@ -31,21 +31,30 @@ async function createFolder() {
 
 // Function to update the folder dropdown
 function updateFolderDropdown() {
-  const folderSelect = document.getElementById('folder-select-upload');
+  const folderUploadSelect = document.getElementById('folder-select-upload');
+  const folderSelect = document.getElementById('folder-select');
+
 
   // Check if the dropdown exists
-  if (!folderSelect) {
+  if (!folderUploadSelect) {
     console.error('Folder dropdown element not found');
     return;
   }
 
-  folderSelect.innerHTML = '<option value="">-- Select a Folder --</option>';
+  console.log(folderSelect)
+
+  folderUploadSelect.innerHTML = '<option value="">-- Select a Folder --</option>';
 
   folders.forEach((folder) => {
     const option = document.createElement('option');
     option.value = folder.id;
     option.textContent = folder.name;
-    folderSelect.appendChild(option);
+    // Append the original to the first dropdown
+    folderUploadSelect.appendChild(option);
+
+    // Clone and append to the second dropdown
+    const clonedOption = option.cloneNode(true);
+    folderSelect.appendChild(clonedOption);
   });
 }
 

@@ -86,10 +86,11 @@ let forms = [];
   function updateFormSelect() {
     const formSelect = document.getElementById('form-select');
     formSelect.innerHTML = '<option value="">-- Select a Form --</option>';
-    forms.forEach((form, index) => {
+    
+    forms.forEach((form) => {
       const option = document.createElement('option');
-      option.value = index;
-      option.textContent = form.name;
+      option.value = form.id; // Use form's UUID as the value
+      option.textContent = form.name; // Display the form's name
       formSelect.appendChild(option);
     });
   }

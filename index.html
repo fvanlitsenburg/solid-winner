@@ -90,63 +90,6 @@
   <script src="forms.js"></script> 
   <script src="folders.js"></script> <!-- Link to the JavaScript file -->
   <script src="runs_retrieve.js"></script> <!-- Link to the JavaScript file -->
-  
-  <script>
-
-    async function runForm() {
-      const formUuid = document.getElementById('form-select').value;
-      const folderUuid = document.getElementById('folder-select').value;
-      const runUuid = generateUUID(); // Assuming you have this utility function
-
-      if (!formUuid || !folderUuid) {
-          alert("Please select both form and folder.");
-          return;
-      }
-
-      // Construct the URL with query parameters
-      const url = `http://localhost:8001/rag_on_form?form_uuid=${encodeURIComponent(formUuid)}&folder_uuid=${encodeURIComponent(folderUuid)}&run_uuid=${encodeURIComponent(runUuid)}`;
-
-      console.log("Sending request to URL:", url);
-
-      try {
-          const response = await fetch(url, {
-              method: 'POST',
-              headers: { 'accept': 'application/json' },
-          });
-
-          if (!response.ok) {
-              const error = await response.json();
-              console.error('Server responded with error:', error);
-              alert(`Failed: ${error.detail || 'Unknown error'}`);
-              return;
-          }
-
-          const result = await response.json();
-          console.log('Success:', result);
-          alert('Request was successful!');
-      } catch (error) {
-          console.error('Error sending request:', error);
-          alert('Failed to send request. Check the console for more details.');
-      }
-  }
-  
-  // Function to generate a run UUID (you could replace it with a better approach if needed)
-  function generateRunUuid() {
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = (Math.random() * 16) | 0;
-        const v = c === 'x' ? r : (r & 0x3) | 0x8;
-        return v.toString(16);
-      });
-    }
-  
-
-  
-
-    
-    
-
-  
-</script>
 
 </body>
 </html>
